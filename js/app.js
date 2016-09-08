@@ -22,52 +22,121 @@ $(document).ready(function(){
     //pick secret random number upon page load
     var secretNumber = getRandomInt();
 
+    //set count and last guess upon page load
+    var countNum = +$('#count').text();
 
-    // reset page for new game
-    var newGame = function() {
-      //$('#userGuess').val() = null;
+
+    //reset game when NEWGAME button clicked
+    $('.new').click(function() {
+      newGame();
+    });
+
+    function newGame() {
       $('#count').text(0);
       $('#guessList').children().remove();
       secretNumber = getRandomInt();
+      $('#feedback').text("Make your Guess!");
+      countNum = 0;
     };
 
-    //call newGame when button clicked
-    $('.new').click(newGame());
 
     //evaluate user guess
     $('form').submit(function(event) {
       event.preventDefault();
-      evaluateGuess();
-    };
-
-    function evaluateGuess() {
-      var userGuess = $('#userGuess').val();
-        // reset input value
+      var valid = validateResponse();
+      if(valid) {
+        evaluateGuess();
+        //$('#count').text(countNum);
+        recordGuessAndCount();
+      }
+      // reset input value
       $('#userGuess').val("");
-      console.log(userGuess)
+    });
 
-      var count = +$('#count').text();
+    function validateResponse() {
+      userGuess = $('#userGuess').val();
+
+      //need to fix
+      var history = $('#guessList').children().map(function() {
+                      return +$(this).text();
+                    }).get();
 
       if(userGuess < 1 || userGuess > 100) {
-        return $('#feedback').text("Guess between 1 and 100!");
-      } else if(count == 0) {
+        $('#feedback').text("Guess between 1 and 100!");
+        return false;
+
+      } else if(!(parseInt(userGuess))) {
+        $('#feedback').text("Enter a number");
+        return false;
+
+      //invalidate guess if it has already been guessed
+      } else if(userGuess ) {
+        $('#feedback').text("Number already guessed");
+        return false;
+
+      } else {
         console.log("Guess is between 1 and 100");
-        console.log("Secret number is " + secretNumber);
-        if(userGuess == secretNumber) {
-          return $('#feedback').text("You Won! Click NEWGAME to play again.");
-        } else if(Math.abs(userGuess - secretNumber) >= 50) {
-          return $('#feedback').text("Ice cold");
-        } else if (Math.abs(userGuess - secretNumber) >= 30) {
-          return $('#feedback').text("Cold");
-        } else if (Math.abs(userGuess - secretNumber) >= 20) {
-          return $('#feedback').text("Warm")
-        } else if (Math.abs(userGuess - secretNumber) >= 10) {
-          return $('#feedback').text("Hot")
-        } else if (Math.abs(userGuess - secretNumber) >= 1) {
-          return $('#feedback').text("Very hot")
-        }
+        console.log("Secret number is " + secretNumber)
+        return true;
       }
-    });
+    };
+
+
+    function evaluateGuess() {
+      console.log("Count: " + (countNum + 1));
+
+      // if(userGuess < 1 || userGuess > 100) {
+      //   return $('#feedback').text("Guess between 1 and 100!");
+
+      // } else if(!(parseInt(userGuess))) {
+      //   return $('#feedback').text("Enter a number");
+
+      // } else {
+      //   console.log("Guess is between 1 and 100");
+      //   console.log("Secret number is " + secretNumber);
+
+        if(userGuess == secretNumber) {
+          $('#feedback').text("You Won! Click NEWGAME to play again.");
+        } else {
+            
+          if(countNum == 0) {
+            countNum += 1;
+
+             if(Math.abs(userGuess - secretNumber) >= 50) {
+                $('#feedback').text("Ice cold");
+            } else if (Math.abs(userGuess - secretNumber) >= 30) {
+                $('#feedback').text("Cold");
+            } else if (Math.abs(userGuess - secretNumber) >= 20) {
+                 $('#feedback').text("Warm");
+            } else if (Math.abs(userGuess - secretNumber) >= 10) {
+                $('#feedback').text("Hot");
+            } else if (Math.abs(userGuess - secretNumber) >= 1) {
+                $('#feedback').text("Very hot");
+            }
+          } else {
+               // countNum != 1
+              countNum += 1;
+              console.log("Recent guess: " + userGuess + ". Old guess: " + oldUserGuess);
+                
+            if(Math.abs(userGuess - secretNumber) < Math.abs(oldUserGuess - secretNumber)) {
+               $('#feedback').text("Hotter!");
+            } else if(Math.abs(userGuess - secretNumber) > Math.abs(oldUserGuess - secretNumber)) {
+               $('#feedback').text("Colder!");
+            } else $('#feedback').text("Neither hotter or colder");
+          }
+          // remember valid guess
+          oldUserGuess = userGuess;
+        }
+      
+    };
+
+
+    function recordGuessAndCount() {
+      if(parseInt(userGuess)) {
+        $('#guessList').append("<li>" + userGuess + "</li>");
+        $('#count').text(countNum);
+      }
+    };
 
 });
 
